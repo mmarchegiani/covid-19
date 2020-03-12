@@ -1,6 +1,8 @@
 Data analysis of the COVID-19 outbreak
 Data origin: https://data.humdata.org/dataset/novel-coronavirus-2019-ncov-cases
 
+``` utility.py ``` : contains usefull functions and common input files
+
 ### Install cartopy
 Following the following instruction https://scitools.org.uk/cartopy/docs/latest/installing.html#installing: 
 
@@ -28,4 +30,7 @@ Following the following instruction https://scitools.org.uk/cartopy/docs/latest/
 - PROJ 4.9.0 or later (https://proj4.org/)
     Cartographic Projections library.
 - six 1.3.0 or later (https://pypi.python.org/pypi/six)
-    Python 2 and 3 compatibility. 
+    Python 2 and 3 compatibility.
+
+
+ 
