@@ -150,3 +150,19 @@ def generate_saveString(model, epochs):
   string = 'model_'
   string = string + model.loss + '_' + str(epochs)
   return string
+
+
+def upsamplingData(dataset, rule='1D', method='linear'):
+  '''
+    Upsample for time series:
+    - Dataset: dataset to be upsampled
+    - rule: define time steps, 1D, 1H, 1M, 1S ...
+    - method: method for the interpolation
+    '''
+  cases, dataset, date = GetTrainValues(dataset)
+  cases = cases.reshape(1, -1)
+  index = pd.date_range('1/22/2020', periods=len(date), freq='1D')
+  casesSeries = pd.Series(cases[0], index)
+  resampled = casesSeries.resample(rule=rule).interpolate(method=method)
+  casesResampled = (resampled.values).reshape(-1, 1)
+  return casesResampled, casesSeries

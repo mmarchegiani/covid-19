@@ -5,8 +5,12 @@ __pycache__/
 
 #yapf
 *.yapf
+
+#zip
+*.zip
 # C extensions
 *.so
+*.o
 
 # Distribution / packaging
 .Python

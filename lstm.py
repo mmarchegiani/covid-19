@@ -1,3 +1,6 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import numpy as np
 import sys
 import os
@@ -25,24 +28,36 @@ country = 'China'
 dataset = covid_country(country)
 
 #Get active cases and date
-cases, dataset, date = GetTrainValues(dataset)
+cases, datasetTranspose, date = GetTrainValues(dataset)
+
+#Get resampled data
+rule = '1D'    #upsampling
+
+if ("." in rule):
+  raise Exception("Dot not allowed, change with integer!")
+#keep linear for now as method
+resampled, series = upsamplingData(dataset, rule=rule, method='linear')
 
 #Quick plot to see the behaviour
-dataset.plot(subplots=True)
+datasetTranspose.plot(subplots=True)
 plt.title(country + ' cases')
 plt.xlabel('Date')
 plt.ylabel('Cases')
 plt.show()
 
 #Preparing for the training, starting with scaling inputs
+
 scaler = MinMaxScaler()
-scaled = scaler.fit_transform(cases)
+scaled = scaler.fit_transform(resampled)
 
 #Create train and validation dataformats
-past_history = 20
-future_target = 1
+#Past history, 60% of the total
+past_history = int(len(scaled) * 0.6)
+#... the remaining have to be predicted
+future_target = int(len(scaled) * 0.25)
 
-xyTrain, xyVal = create_train_val(scaled, 0, 50, past_history, future_target)
+end_index = len(scaled) - future_target
+xyTrain, xyVal = create_train_val(scaled, 0, end_index, past_history, future_target)
 x_train_uni, y_train_uni = xyTrain[0], xyTrain[1]
 x_val_uni, y_val_uni = xyVal[0], xyVal[1]
 # print("Train \n {} \n Validation \n {} \n".format(xyTrain, xyVal))
@@ -57,9 +72,11 @@ def baseline(history):
 
 show_plot(
     [x_train_uni[0], y_train_uni[0], baseline(x_train_uni[0])],
-    0,
+    future_target,
     'Baseline Prediction (Based on mean)'
     )
+
+#TODO: pass train parameters from command line
 
 BATCH_SIZE = 1
 BUFFER_SIZE = 30
@@ -82,14 +99,19 @@ val_univariate = val_univariate.batch(BATCH_SIZE).repeat()
 # for element in val_univariate:
 #     print(element)
 
+activation = 'relu'
+
 # NOTE: ERROR USING TANH ACTIVATION FUNCTION, TENSORFLOW ISSUE https://github.com/tensorflow/tensorflow/issues/30263
 #Let's stay with relu or sigmoid for now
+
+if (activation == 'tanh'):
+  raise Exception('tanh has issue, please change activation function!')
 
 lstm_model = tf.keras.models.Sequential(
     [
         tf.keras.layers.LSTM(
             1,
-            activation='relu',
+            activation=activation,
             input_shape=x_train_uni.shape[-2:],
             return_sequences=True
             ),
@@ -110,7 +132,8 @@ for x, y in val_univariate.take(1):
   print(lstm_model.predict(x).shape)
 
 EVALUATION_INTERVAL = 100
-EPOCHS = 50
+EPOCHS = 10
+VALIDATION_STEP = 50
 
 print("@@@@@ Starting the training  @@@@@ \n")
 history = lstm_model.fit(
@@ -118,10 +141,12 @@ history = lstm_model.fit(
     epochs=EPOCHS,
     steps_per_epoch=EVALUATION_INTERVAL,
     validation_data=val_univariate,
-    validation_steps=50
+    validation_steps=VALIDATION_STEP
     )
 
 file_name = generate_saveString(lstm_model, EPOCHS)
 
+if (rule != '1D'):
+  file_name = file_name + '_' + rule
 lstm_model.save(model_path + file_name + '.h5')
 plot_losses(history, file_name + '.png')
