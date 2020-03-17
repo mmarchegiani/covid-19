@@ -134,6 +134,7 @@ def plot_losses(history, file_name):
   plt.title("Loss functions")
   plt.xlabel('Epochs')
   plt.ylabel('Loss')
+  plt.legend()
   # plt.show()
   plt.savefig('LSTM/plot/' + file_name)
 
