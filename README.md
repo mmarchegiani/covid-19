@@ -33,4 +33,6 @@ Following the following instruction https://scitools.org.uk/cartopy/docs/latest/
     Python 2 and 3 compatibility.
 
 
- 
+#### Requirement for machine learning models:
+- Tensorflow 2.0: ``` pip install tensorflow==2.0 ```
+- pyyaml and h5py for save and load models: ``` pip install pyyaml h5py ```

@@ -3,8 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#yapf
+*.yapf
+
+#zip
+*.zip
 # C extensions
 *.so
+*.o
 
 # Distribution / packaging
 .Python
