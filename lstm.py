@@ -25,10 +25,10 @@ country = 'China'
 dataset = covid_country(country)
 
 #Get active cases and date
-cases, dataset, date = GetTrainValues(dataset) 
+cases, dataset, date = GetTrainValues(dataset)
 
 #Quick plot to see the behaviour
-dataset.plot(subplots = True)
+dataset.plot(subplots=True)
 plt.title(country + ' cases')
 plt.xlabel('Date')
 plt.ylabel('Cases')
@@ -37,7 +37,6 @@ plt.show()
 #Preparing for the training, starting with scaling inputs
 scaler = MinMaxScaler()
 scaled = scaler.fit_transform(cases)
-
 
 #Create train and validation dataformats
 past_history = 20
@@ -55,14 +54,21 @@ show_plot([x_train_uni[0], y_train_uni[0]], 0, 'Sample Example')
 def baseline(history):
   return np.mean(history)
 
-show_plot([x_train_uni[0], y_train_uni[0], baseline(x_train_uni[0])], 0,
-           'Baseline Prediction (Based on mean)')
+
+show_plot(
+    [x_train_uni[0], y_train_uni[0], baseline(x_train_uni[0])],
+    0,
+    'Baseline Prediction (Based on mean)'
+    )
 
 BATCH_SIZE = 1
 BUFFER_SIZE = 30
 
-train_univariate = tf.data.Dataset.from_tensor_slices((x_train_uni, y_train_uni))
-train_univariate = train_univariate.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
+train_univariate = tf.data.Dataset.from_tensor_slices(
+    (x_train_uni, y_train_uni)
+    )
+train_univariate = train_univariate.cache(
+).shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
 
 # for x,y in train_univariate.take(1):
 #     print(x,y)
@@ -79,55 +85,43 @@ val_univariate = val_univariate.batch(BATCH_SIZE).repeat()
 # NOTE: ERROR USING TANH ACTIVATION FUNCTION, TENSORFLOW ISSUE https://github.com/tensorflow/tensorflow/issues/30263
 #Let's stay with relu or sigmoid for now
 
-lstm_model = tf.keras.models.Sequential([
-    tf.keras.layers.LSTM(1, activation = 'relu',  input_shape = x_train_uni.shape[-2:], return_sequences = True),
-    tf.keras.layers.Dense(1)
-])
+lstm_model = tf.keras.models.Sequential(
+    [
+        tf.keras.layers.LSTM(
+            1,
+            activation='relu',
+            input_shape=x_train_uni.shape[-2:],
+            return_sequences=True
+            ),
+        tf.keras.layers.Dense(1)
+        ]
+    )
 
 optimizer = ['adam']
 loss_function = ['mse', 'binary_crossentropy']
 
-lstm_model.compile(optimizer = optimizer[0], loss = loss_function[0])
+lstm_model.compile(optimizer=optimizer[0], loss=loss_function[0])
 
 print("\n\n {}".format(lstm_model.summary()))
 
 print("@@@@@ Train prediction shape @@@@@ \n")
 
 for x, y in val_univariate.take(1):
-    print(lstm_model.predict(x).shape)
+  print(lstm_model.predict(x).shape)
 
 EVALUATION_INTERVAL = 100
 EPOCHS = 50
 
-
 print("@@@@@ Starting the training  @@@@@ \n")
-history = lstm_model.fit(train_univariate, epochs=EPOCHS,
-                      steps_per_epoch=EVALUATION_INTERVAL,
-                      validation_data=val_univariate, validation_steps=50)
+history = lstm_model.fit(
+    train_univariate,
+    epochs=EPOCHS,
+    steps_per_epoch=EVALUATION_INTERVAL,
+    validation_data=val_univariate,
+    validation_steps=50
+    )
 
 file_name = generate_saveString(lstm_model, EPOCHS)
 
-lstm_model.save(model_path+file_name+'.h5')
-plot_losses(history, file_name+'.png')
-
-
-
-
-# plot_losses(history)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+lstm_model.save(model_path + file_name + '.h5')
+plot_losses(history, file_name + '.png')
